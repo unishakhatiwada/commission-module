@@ -41,20 +41,20 @@ Once the project is running:
 
 3.  **Build and Run the containers:**
     ```bash
-    docker-compose build
-    docker-compose up -d
+    docker compose build
+    docker compose up -d
     ```
 
 4.  **Perform initial setup inside the backend container:**
     ```bash
-    docker-compose exec backend composer install
-    docker-compose exec backend php artisan key:generate
-    docker-compose exec backend php artisan migrate
+    docker compose exec backend composer install
+    docker compose exec backend php artisan key:generate
+    docker compose exec backend php artisan migrate
     ```
 
 5.  **Install frontend dependencies (optional, as Dockerfile does this but good for local dev):**
     ```bash
-    docker-compose exec frontend npm install
+    docker compose exec frontend npm install
     ```
 
 ### 2. For Windows Users
@@ -66,20 +66,20 @@ Once the project is running:
 
 2.  **Build and Run the containers:**
     ```powershell
-    docker-compose build
-    docker-compose up -d
+    docker compose build
+    docker compose up -d
     ```
 
 3.  **Perform initial setup inside the backend container:**
     ```powershell
-    docker-compose exec backend composer install
-    docker-compose exec backend php artisan key:generate
-    docker-compose exec backend php artisan migrate
+    docker compose exec backend composer install
+    docker compose exec backend php artisan key:generate
+    docker compose exec backend php artisan migrate
     ```
 
 4.  **Install frontend dependencies (optional, as Dockerfile does this but good for local dev):**
     ```powershell
-    docker-compose exec frontend npm install
+    docker compose exec frontend npm install
     ```
 
 #### Using WSL (Windows Subsystem for Linux):
@@ -98,20 +98,20 @@ Once the project is running:
 
 3.  **Build and Run the containers:**
     ```bash
-    docker-compose build
-    docker-compose up -d
+    docker compose build
+    docker compose up -d
     ```
 
 4.  **Perform initial setup inside the backend container:**
     ```bash
-    docker-compose exec backend composer install
-    docker-compose exec backend php artisan key:generate
-    docker-compose exec backend php artisan migrate
+    docker compose exec backend composer install
+    docker compose exec backend php artisan key:generate
+    docker compose exec backend php artisan migrate
     ```
 
 5.  **Install frontend dependencies (optional, as Dockerfile does this but good for local dev):**
     ```bash
-    docker-compose exec frontend npm install
+    docker compose exec frontend npm install
     ```
 
 ### Stopping the Project
@@ -119,13 +119,13 @@ Once the project is running:
 To stop and remove the containers, networks, and volumes (database data will persist in the `db_data` volume by default), run:
 
 ```bash
-docker-compose down
+docker compose down
 ```
 
 To stop and remove containers, networks, and all volumes (including database data), run:
 
 ```bash
-docker-compose down -v
+docker compose down -v
 ```
 
 ---
