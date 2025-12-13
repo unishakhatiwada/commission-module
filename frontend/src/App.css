@@ -1,0 +1,63 @@
+:root {
+  --bg-color: #ebecf0;
+  --text-color: #5d6373;
+  --shadow-light: #ffffff;
+  --shadow-dark: #babecc;
+  --primary: #3b82f6;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-family: 'Nunito', sans-serif;
+  margin: 0;
+  padding: 20px;
+}
+
+/* Neumorphic Card */
+.neu-card {
+  border-radius: 12px;
+  background: var(--bg-color);
+  box-shadow: -5px -5px 10px var(--shadow-light),
+               5px 5px 10px var(--shadow-dark);
+  padding: 20px;
+  border: 1px solid rgba(255,255,255,0.2);
+  margin-bottom: 20px;
+}
+
+/* Neumorphic Input */
+.neu-input {
+  border-radius: 8px;
+  background: var(--bg-color);
+  box-shadow: inset 2px 2px 5px var(--shadow-dark),
+              inset -2px -2px 5px var(--shadow-light);
+  border: none;
+  outline: none;
+  padding: 10px;
+  width: 100%;
+  color: var(--text-color);
+  box-sizing: border-box;
+}
+
+/* Neumorphic Button */
+.neu-btn {
+  color: var(--primary);
+  font-weight: bold;
+  border-radius: 20px;
+  background: var(--bg-color);
+  box-shadow: -2px -2px 5px var(--shadow-light),
+               2px 2px 5px var(--shadow-dark);
+  border: none;
+  cursor: pointer;
+  padding: 10px 20px;
+  transition: all 0.2s ease;
+}
+
+.neu-btn:active {
+  box-shadow: inset 1px 1px 2px var(--shadow-dark),
+              inset -1px -1px 2px var(--shadow-light);
+}
+
+.neu-btn.danger {
+  color: #ef4444;
+}
