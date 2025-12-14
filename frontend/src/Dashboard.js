@@ -158,11 +158,8 @@ function Dashboard({ onLogout }) {
         <div className="app-container">
             <div className="dashboard-header">
                 <h2 className="page-title" style={{marginBottom:0}}>Commission Rules</h2>
-                <button
-                    onClick={onLogout}
-                    style={{background:'none', border:'none', color:'#ef4444', fontWeight:'bold', cursor:'pointer'}}
-                >
-                    Logout ➞
+                <button className="logout-btn" onClick={onLogout}>
+                    Logout
                 </button>
             </div>
 
@@ -195,7 +192,7 @@ function Dashboard({ onLogout }) {
                             ✕
                         </button>
 
-                        <div className="form-grid">
+                        <div className="form-grid-single">
                             <AirportSelect
                                 label="Origin"
                                 options={airports}
@@ -215,9 +212,7 @@ function Dashboard({ onLogout }) {
                                 onChange={(val) => updateRule(rule.id, 'destinations', val)}
                                 error={ruleError.destinations}
                             />
-                        </div>
 
-                        <div className="form-row">
                             <div className="form-group">
                                 <label className={`input-label ${ruleError.rate ? 'error' : ''}`}>
                                     Rate
@@ -239,7 +234,7 @@ function Dashboard({ onLogout }) {
                                     onChange={(e) => updateRule(rule.id, 'rate_type', e.target.value)}
                                 >
                                     <option value="percentage">Percentage (%)</option>
-                                    <option value="flat">Flat ($)</option>
+                                    <option value="flat">Flat ()</option>
                                 </select>
                             </div>
                         </div>
