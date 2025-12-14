@@ -31,7 +31,6 @@ class AirportSeeder extends Seeder
             ["code"=>"LAX","name"=>"Los Angeles International Airport","city"=>"Los Angeles","country"=>"USA"]
         ];
 
-        // Optimized insert (One query instead of loop)
-        Airport::insert($data);
+        Airport::upsert($data, ['code']);
     }
 }

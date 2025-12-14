@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreCommissionRequest;
 use App\Http\Requests\UpdateCommissionRequest;
 use App\Http\Resources\AirportResource;
 use App\Http\Resources\CommissionResource;
 use App\Models\Airport;
 use App\Models\CommissionRule;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class CommissionController extends Controller
