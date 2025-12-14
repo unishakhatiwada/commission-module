@@ -1,170 +1,200 @@
 # Commission Management Module
 
-This project is a full-stack Commission Management Module, featuring a Laravel backend, a React frontend, and a MySQL database, all orchestrated with Docker Compose.
+A full-stack application for managing airline commission rules, featuring a **Laravel** backend, **React** frontend, and **MySQL** database, all orchestrated with **Docker Compose**.
+
+---
 
 ## Prerequisites
 
-Before you begin, ensure you have the following installed on your system:
+You can run this project using **either** Docker (recommended) **or** a manual local setup.
 
-*   **Docker Desktop**: Includes Docker Engine and Docker Compose.
-    *   [Download for Windows](https://docs.docker.com/desktop/install/windows-install/)
-    *   [Download for Mac](https://docs.docker.com/desktop/install/mac-install/)
-    *   [Install for Linux](https://docs.docker.com/engine/install/ubuntu/) (or your respective Linux distribution)
+- **Docker & Docker Compose (v2)** *OR*
+- **PHP 8.1+**, **Node.js**, and **MySQL** (for manual installation)
+- **Docker**: [Install Docker Engine](https://docs.docker.com/get-docker/)
+- ⏱️ **Estimated setup time:** ~2 minutes with Docker
 
-## How to Run the Project
+---
 
-The project can be run using Docker Compose, which will set up the backend, frontend, and database services.
+## Project Structure
 
-### Accessible URLs
-
-Once the project is running:
-
-*   **Frontend (React)**: Accessible at [http://localhost:3000](http://localhost:3000)
-*   **Backend (Laravel API)**: Accessible at [http://localhost:8000](http://localhost:8000)
-
-### 1. For Linux Users
-
-1.  **Navigate to the project root:**
-    Open your terminal and change directory to the root of this project where `docker-compose.yml` is located.
-
-2.  **Set directory permissions (if needed):**
-    Laravel requires specific write permissions for its `storage` and `bootstrap/cache` directories. If you encounter permission errors after starting the containers, you might need to adjust them.
-    The Dockerfile attempts to set these permissions for the `www-data` user, but if you're mounting volumes, the host user's permissions can interfere.
-
-    To ensure the `backend` service can write to necessary directories, you might need to run the following commands *before* `docker-compose up` or after the containers are created if `www-data` user ID differs:
-
-    ```bash
-    sudo chmod -R 775 backend/storage backend/bootstrap/cache
-    sudo chown -R $USER:www-data backend/storage backend/bootstrap/cache
-    ```
-    *Note: `$USER` will resolve to your current username. You might need to adjust `www-data` to match the group name used by PHP-FPM inside the container (which is typically `www-data`).*
-
-3.  **Build and Run the containers:**
-    ```bash
-    docker compose build
-    docker compose up -d
-    ```
-
-4.  **Perform initial setup inside the backend container:**
-    ```bash
-    docker compose exec backend composer install
-    docker compose exec backend php artisan key:generate
-    docker compose exec backend php artisan migrate
-    ```
-
-5.  **Install frontend dependencies (optional, as Dockerfile does this but good for local dev):**
-    ```bash
-    docker compose exec frontend npm install
-    ```
-
-### 2. For Windows Users
-
-#### Using PowerShell (or Command Prompt):
-
-1.  **Navigate to the project root:**
-    Open PowerShell (or Command Prompt) and navigate to the root directory of this project where `docker-compose.yml` is located.
-
-2.  **Build and Run the containers:**
-    ```powershell
-    docker compose build
-    docker compose up -d
-    ```
-
-3.  **Perform initial setup inside the backend container:**
-    ```powershell
-    docker compose exec backend composer install
-    docker compose exec backend php artisan key:generate
-    docker compose exec backend php artisan migrate
-    ```
-
-4.  **Install frontend dependencies (optional, as Dockerfile does this but good for local dev):**
-    ```powershell
-    docker compose exec frontend npm install
-    ```
-
-#### Using WSL (Windows Subsystem for Linux):
-
-1.  **Navigate to the project root:**
-    Open your WSL terminal (e.g., Ubuntu) and navigate to the project directory. If your project is on a Windows drive (e.g., `C:`), it will be mounted under `/mnt/c/`. For example: `cd /mnt/c/Users/YourUser/YourProject`.
-
-2.  **Set directory permissions (if needed):**
-    Similar to Linux, if you encounter permission issues for Laravel's `storage` or `bootstrap/cache` directories, you might need to set them. In WSL, file system permissions generally behave like Linux.
-
-    ```bash
-    chmod -R 775 backend/storage backend/bootstrap/cache
-    chown -R $(id -un):www-data backend/storage backend/bootstrap/cache
-    ```
-    *Note: `$(id -un)` will get your current WSL username. Adjust `www-data` if necessary.*
-
-3.  **Build and Run the containers:**
-    ```bash
-    docker compose build
-    docker compose up -d
-    ```
-
-4.  **Perform initial setup inside the backend container:**
-    ```bash
-    docker compose exec backend composer install
-    docker compose exec backend php artisan key:generate
-    docker compose exec backend php artisan migrate
-    ```
-
-5.  **Install frontend dependencies (optional, as Dockerfile does this but good for local dev):**
-    ```bash
-    docker compose exec frontend npm install
-    ```
-
-### Stopping the Project
-
-To stop and remove the containers, networks, and volumes (database data will persist in the `db_data` volume by default), run:
-
-```bash
-docker compose down
-```
-
-To stop and remove containers, networks, and all volumes (including database data), run:
-
-```bash
-docker compose down -v
+```text
+backend/            → Laravel API  
+frontend/           → React application  
+docker-compose.yml  → Docker orchestration config
+README.md           → Project documentation
 ```
 
 ---
 
-## Troubleshooting
+## 🚀 Quick Start (Recommended: Docker)
+Docker ensures a consistent and hassle-free setup across systems.
 
-### "Permission denied" errors for `storage` or `bootstrap/cache`
+### 1.Configure Environment
+Before starting the containers, create the backend environment file by copying the example file.
+```bash
+cp backend/.env.example backend/.env
+```
+### 2.Start the Project
+From the root directory, build and start all containers:
+````bash
+docker compose up -d --build
+````
 
-This is a common issue when running Laravel with Docker on systems where host user permissions don't align with the user inside the Docker container (`www-data`).
-
-**Solution:**
-Follow the `chmod` and `chown` instructions in the "Linux Users" or "Windows Users (WSL)" section above. Ensure the `www-data` group has write access. If issues persist, you might need to manually inspect the UID/GID inside the container and adjust host permissions accordingly, or change the user Docker runs as in the `backend/Dockerfile`.
-
-### Ports already in use (e.g., `port 8000 already in use`)
-
-This error occurs if another application on your host machine is already using port `8000` or `3000`.
-
-**Solution:**
-1.  Identify and stop the conflicting application.
-2.  Alternatively, you can modify the `docker-compose.yml` file to map to different host ports. For example, to map backend to `8001` and frontend to `3001`:
-
-    ```yaml
-    # In docker-compose.yml
-    services:
-      backend:
-        ports:
-          - "8001:8000" # Change host port from 8000 to 8001
-      frontend:
-        ports:
-          - "3001:3000" # Change host port from 3000 to 3001
-    ```
-    Remember to update `REACT_APP_BACKEND_URL` in `frontend/Dockerfile` if you change the backend port.
-
-### Frontend (React) not connecting to Backend (Laravel)
-
-Ensure the `REACT_APP_BACKEND_URL` in `docker-compose.yml` (and potentially `frontend/Dockerfile`) is correctly set to `http://localhost:8000` (or your chosen backend port). Also, verify the backend container is running without errors.
+### 3. Setup Database & Admin User (CRITICAL)
+**Wait 10–15 seconds** for the MySQL container to fully initialize, then run the command below to:
+ # Generate App Key:
 
 ```bash
-docker-compose logs backend
+docker compose exec backend php artisan key:generate
 ```
+# Migrate & Seed Data:
 
-Check browser's developer console for network errors.
+````bash
+docker compose exec backend php artisan migrate:fresh --seed
+````
+
+### 4. Login Details
+After seeding completes, access the application dashboard:
+
+* **URL:** [http://localhost:3000](http://localhost:3000)
+* **Email:** `admin@admin.com`
+* **Password:** `Password@123`
+
+> The seeded admin user has full access to manage commission rules.
+
+---
+
+## ✅ Running Automated Tests
+This project includes an **Automated Feature Test** suite (Laravel) covering:
+* Authentication & security rules
+* Business logic constraints
+* CRUD operations
+
+Run the test suite with:
+
+````bash
+docker compose exec backend php artisan test
+````
+
+**What is tested?**
+* Unauthenticated access is blocked (401 Unauthorized)
+* Admin login and token generation
+* **Business Logic:** Prevents Origin & Destination from being the same
+* **Wildcards:** Verifies "Select All" functionality works correctly
+
+---
+
+## 🛠️ Tech Stack
+
+### Frontend
+* React.js
+* Axios
+* CSS Modules (Responsive UI)
+
+### Backend
+* Laravel 11
+* Sanctum Authentication
+
+### Database
+* MySQL 8.0
+
+### Infrastructure
+* Docker
+* Docker Compose (v2)
+
+> Docker is the recommended environment to ensure consistency across systems and simplify setup.
+
+---
+
+## ❓ Troubleshooting
+
+### Database Connection Refused
+If the migration command fails immediately, the MySQL container may still be starting.
+**✅ Solution:**
+1. Wait 10 seconds.
+2. Re-run step #2 (`migrate:fresh --seed`).
+
+### Port Conflicts
+If ports `3000` or `8000` are already in use, update the port mappings in `docker-compose.yml`.
+
+**Example:**
+```yaml
+ports:
+- "8081:8000" # Maps localhost:8081 → container:8000
+  ```
+  *Make sure to update frontend environment variables if backend ports change.*
+
+---
+
+## 🧩 Alternative: Manual Installation (No Docker)
+
+If Docker is not available, you can run the project locally using the steps below.
+
+### ✅ Prerequisites
+* PHP 8.1+ & Composer
+* Node.js & npm
+* MySQL Server (running locally)
+
+### 🔧 Step 1: Backend Setup (Laravel)
+
+1. Navigate to the backend directory:
+   ```bash
+   cd backend
+   ```
+2. Install dependencies:
+   ```bash
+   composer install
+   ```
+3. **Configure Environment** Copy the example environment file:
+   ```bash
+   cp .env.example .env
+   ```
+   Edit `.env` and configure your local database:
+   ```ini
+   DB_CONNECTION=mysql
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_DATABASE=commission_db
+   DB_USERNAME=root
+   DB_PASSWORD=your_password
+   ```
+   *Ensure the database exists before continuing.*
+
+4. Generate App Key & Seed Database:
+   ```bash
+   php artisan key:generate
+   php artisan migrate:fresh --seed
+   ```
+
+5. Start the Backend Server:
+   ```bash
+   php artisan serve
+   ```
+   Backend API will be available at: `http://127.0.0.1:8000`
+
+### 🎨 Step 2: Frontend Setup (React)
+
+1. Open a new terminal and navigate to the frontend directory:
+   ```bash
+   cd frontend
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Start the React application:
+   ```bash
+   npm start
+   ```
+   The application will be available at: `http://localhost:3000`
+
+---
+
+## ✅ Summary
+* Fully containerized with Docker for fast setup
+* Manual installation supported (no Docker required)
+* Seeded admin user included for immediate access
+* Automated tests included for business logic & security
+
+---
+**👩‍💻 Author:** Unisha Khatiwada  
