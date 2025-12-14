@@ -18,7 +18,22 @@ function Dashboard({ onLogout }) {
                     client.get('/rules')
                 ]);
                 setAirports(airportRes.data.data);
-                setRules(ruleRes.data.data || []);
+                const fetchedRules = ruleRes.data.data || [];
+
+                if (fetchedRules.length === 0) {
+                    // If no rules exist, create one empty default rule
+                    setRules([{
+                        id: `temp-${Date.now()}`,
+                        origins: [],
+                        all_origins: false,
+                        destinations: [],
+                        all_destinations: false,
+                        rate: '',
+                        rate_type: 'percentage'
+                    }]);
+                } else {
+                    setRules(fetchedRules);
+                }
             } catch (err) {
                 setNotification({ type: 'error', message: "Failed to load initial data." });
             }

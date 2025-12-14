@@ -20,10 +20,11 @@ services:
       DB_USERNAME: root
       DB_PASSWORD: rootpassword
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - app-network
-    command: sh -c "composer install && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000"
+    command: sh -c "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000"
 
   frontend:
     build:
@@ -38,7 +39,9 @@ services:
       - /app/node_modules
     networks:
       - app-network
-    command: npm start 
+    environment:
+      - WDS_SOCKET_PORT=0
+    command: npm start
 
   db:
     image: mysql:8.0
@@ -53,6 +56,11 @@ services:
       - dbdata:/var/lib/mysql
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
 
 networks:
   app-network:
