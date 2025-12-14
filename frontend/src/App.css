@@ -472,3 +472,191 @@ body {
   text-align: center;
   font-size: 0.9rem;
 }
+
+/* --- Login Page Specifics --- */
+
+.login-container {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #e0e5ec;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  padding: 40px;
+  text-align: center;
+  background-color: #f8f9fa;
+  border-radius: 10px;
+  box-shadow: 5px 5px 10px #bebebe, -5px -5px 10px #ffffff;
+}
+
+.login-title {
+  color: #1f2937;
+  margin-bottom: 30px;
+  font-weight: bold;
+  font-size: 1.5rem;
+}
+
+.login-error-box {
+  padding: 12px;
+  margin-bottom: 20px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background-color: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+  text-align: left;
+}
+
+.login-form-group {
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.login-label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #4b5563;
+  font-size: 0.9rem;
+}
+
+.login-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Reusing .neu-input from before, but adding specific login tweaks if needed */
+.login-input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: #e0e5ec;
+  box-shadow: inset 2px 2px 5px #babecc, inset -5px -5px 10px #ffffff;
+  outline: none;
+  font-size: 1rem;
+  color: #1f2937;
+  transition: all 0.2s;
+}
+
+.login-input.error {
+  border-color: #ef4444;
+  box-shadow: none; /* Remove shadow to make red border clear */
+}
+
+.login-input-error-msg {
+  color: #ef4444;
+  font-size: 0.8rem;
+  margin-top: 5px;
+}
+
+.login-toggle-btn {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  padding: 0;
+}
+.login-toggle-btn:hover {
+  color: #374151;
+}
+
+.login-btn {
+  width: 100%;
+  padding: 14px;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: background-color 0.2s;
+  margin-top: 10px;
+}
+
+.login-btn:hover:not(:disabled) {
+  background-color: #2563eb;
+}
+
+.login-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.login-footer {
+  margin-top: 25px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.login-footer p {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* --- Responsiveness (Add to bottom of App.css) --- */
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+@media (max-width: 768px) {
+
+  .app-container {
+    padding: 15px;
+  }
+
+  .dashboard-header {
+    flex-direction: row;
+    margin-bottom: 20px;
+  }
+
+  .page-title {
+    font-size: 1.5rem;
+  }
+
+  .neu-card {
+    padding: 20px;
+    padding-top: 50px;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .footer-buttons {
+    flex-direction: column-reverse;
+    gap: 15px;
+  }
+
+  .btn-save, .btn-add {
+    width: 100%;
+    text-align: center;
+  }
+
+  .delete-btn {
+    width: 40px;
+    height: 40px;
+  }
+}
