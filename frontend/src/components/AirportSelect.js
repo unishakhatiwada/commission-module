@@ -1,8 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
-const AirportSelect = ({ label, options, selected, onChange }) => {
+const AirportSelect = ({ label, options, selected, onChange, isAll, onToggleAll, error }) => {
   const [query, setQuery] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
+  const wrapperRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [wrapperRef]);
 
   const addTag = (airport) => {
     if (!selected.find(s => s.code === airport.code)) {
@@ -17,51 +28,86 @@ const AirportSelect = ({ label, options, selected, onChange }) => {
   };
 
   const filteredOptions = options.filter(opt =>
-    opt.code.toLowerCase().includes(query.toLowerCase()) ||
-    opt.city.toLowerCase().includes(query.toLowerCase())
+      opt.code.toLowerCase().includes(query.toLowerCase()) ||
+      opt.city.toLowerCase().includes(query.toLowerCase())
   );
 
   return (
-    <div className="mb-4">
-      <label style={{display:'block', marginBottom:'5px', fontWeight:'bold', fontSize:'0.9rem'}}>{label}</label>
+      <div className="as-container" ref={wrapperRef}>
+        <div className="as-header">
+          <label className={`input-label ${error ? 'error' : ''}`}>{label}</label>
 
-      <div className="neu-input" style={{minHeight: '45px', display:'flex', flexWrap:'wrap', gap:'5px', alignItems:'center'}}>
-        {selected.map(apt => (
-          <span key={apt.code} style={{background: '#dbeafe', color:'#2563eb', padding:'2px 8px', borderRadius:'4px', fontSize:'0.85rem', display:'flex', alignItems:'center'}}>
-            {apt.code}
-            <button onClick={() => removeTag(apt.code)} style={{background:'none', border:'none', color:'#ef4444', marginLeft:'5px', cursor:'pointer', fontWeight:'bold'}}>×</button>
-          </span>
-        ))}
-        <input
-          type="text"
-          style={{background:'transparent', border:'none', outline:'none', flex:1, minWidth:'100px'}}
-          placeholder={selected.length === 0 ? "Search airport..." : ""}
-          value={query}
-          onChange={e => {setQuery(e.target.value); setShowDropdown(true);}}
-          onFocus={() => setShowDropdown(true)}
-        />
-      </div>
-
-      {showDropdown && query && (
-        <div style={{position:'absolute', zIndex:10, background:'#ebecf0', width:'300px', maxHeight:'200px', overflowY:'auto', boxShadow:'5px 5px 10px #babecc', borderRadius:'8px', marginTop:'5px'}}>
-          {filteredOptions.length > 0 ? filteredOptions.map(opt => (
-            <div
-              key={opt.code}
-              onClick={() => addTag(opt)}
-              style={{padding:'8px', cursor:'pointer', borderBottom:'1px solid #ddd'}}
-              onMouseEnter={(e) => e.target.style.background = '#d1d5db'}
-              onMouseLeave={(e) => e.target.style.background = 'transparent'}
-            >
-              <strong>{opt.code}</strong> - {opt.city}, {opt.country}
-            </div>
-          )) : (
-            <div style={{padding:'8px', color:'#888'}}>No airports found</div>
-          )}
+          <label className={`as-checkbox-label ${isAll ? 'active' : ''}`}>
+            <input
+                type="checkbox"
+                className="as-checkbox"
+                checked={isAll || false}
+                onChange={(e) => {
+                  onToggleAll(e.target.checked);
+                  if (e.target.checked) setShowDropdown(false);
+                }}
+            />
+            All Airports
+          </label>
         </div>
-      )}
-      {/* Overlay to close dropdown when clicking outside */}
-      {showDropdown && <div style={{position:'fixed', top:0, left:0, width:'100vw', height:'100vh', zIndex:9}} onClick={() => setShowDropdown(false)}></div>}
-    </div>
+
+        {isAll ? (
+            <div className="as-all-box">
+              Applicable to <strong>&nbsp;All {label}s</strong>&nbsp;(Wildcard Active)
+            </div>
+        ) : (
+            <div
+                className={`as-input-box ${error ? 'error' : ''}`}
+                onClick={() => setShowDropdown(true)}
+            >
+              {selected.map(apt => (
+                  <span key={apt.code} className="as-tag">
+                    <span className="as-tag-text">{apt.code}</span>
+                    <button
+                        className="as-tag-remove"
+                        onClick={(e) => { e.stopPropagation(); removeTag(apt.code); }}
+                    >
+                        ✕
+                    </button>
+                </span>
+              ))}
+
+              <input
+                  type="text"
+                  className="as-text-input"
+                  placeholder={selected.length === 0 ? "Select airports..." : ""}
+                  value={query}
+                  onChange={e => {setQuery(e.target.value); setShowDropdown(true);}}
+                  onFocus={() => setShowDropdown(true)}
+              />
+
+              <span className="as-arrow">▼</span>
+
+              {showDropdown && (
+                  <div className="as-dropdown">
+                    {filteredOptions.length > 0 ? (
+                        filteredOptions.slice(0, 50).map(opt => {
+                          const isSelected = selected.find(s => s.code === opt.code);
+                          return (
+                              <div
+                                  key={opt.code}
+                                  onClick={(e) => { e.stopPropagation(); addTag(opt); }}
+                                  className={`as-option ${isSelected ? 'selected' : ''}`}
+                              >
+                                <div className="as-option-code">{opt.code}</div>
+                                <div className="as-option-city">{opt.city}, {opt.country}</div>
+                              </div>
+                          );
+                        })
+                    ) : (
+                        <div className="as-no-options">No airports found</div>
+                    )}
+                  </div>
+              )}
+            </div>
+        )}
+        {error && <div className="error-text">{error}</div>}
+      </div>
   );
 };
 

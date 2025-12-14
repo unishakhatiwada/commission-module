@@ -30,7 +30,29 @@ class UpdateCommissionRequest extends FormRequest
             'rate_type' => 'sometimes|required|in:percentage,flat',
         ];
     }
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            if ($this->boolean('all_origins') || $this->boolean('all_destinations')) {
+                return;
+            }
 
+            $origins = $this->input('origins', []);
+            $dests   = $this->input('destinations', []);
+
+            $normalize = fn($items) => array_map(fn($i) => is_array($i) ? ($i['code'] ?? '') : $i, $items);
+
+            $originCodes = $normalize($origins);
+            $destCodes   = $normalize($dests);
+
+            if (!empty(array_intersect($originCodes, $destCodes))) {
+                $validator->errors()->add(
+                    'destinations',
+                    'Origin and Destination cannot be the same.'
+                );
+            }
+        });
+    }
     public function attributes(): array
     {
         return [

@@ -31,7 +31,36 @@ class StoreCommissionRequest extends FormRequest
             'rules.*.rate_type' => 'required|in:percentage,flat',
         ];
     }
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $rules = $this->input('rules', []);
 
+            foreach ($rules as $index => $rule) {
+                $allOrigins = $rule['all_origins'] ?? false;
+                $allDests   = $rule['all_destinations'] ?? false;
+
+                if ($allOrigins || $allDests) {
+                    continue;
+                }
+
+                $origins = $rule['origins'] ?? [];
+                $dests   = $rule['destinations'] ?? [];
+
+                $normalize = fn($items) => array_map(fn($i) => is_array($i) ? ($i['code'] ?? '') : $i, $items);
+
+                $originCodes = $normalize($origins);
+                $destCodes   = $normalize($dests);
+
+                if (!empty(array_intersect($originCodes, $destCodes))) {
+                    $validator->errors()->add(
+                        "rules.{$index}.destinations",
+                        "Origin and Destination cannot be the same."
+                    );
+                }
+            }
+        });
+    }
     /**
      * Rename the ugly "rules.0.rate" to readable names
      */
