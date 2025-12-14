@@ -1,148 +1,238 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import AirportSelect from './components/AirportSelect';
+import client from './api/client';
 
 function App() {
   const [rules, setRules] = useState([]);
   const [airports, setAirports] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [errors, setErrors] = useState({});
+  const [notification, setNotification] = useState(null);
 
   useEffect(() => {
-    fetch('http://localhost:8000/api/airports')
-      .then(res => {
-        if (!res.ok) throw new Error("Failed to load airports");
-        return res.json();
-      })
-      .then(data => setAirports(data))
-      .catch(err => console.error("API Error:", err));
-
-    // Fetch Existing Rules
-    fetch('http://localhost:8000/api/rules')
-      .then(res => {
-        if (!res.ok) throw new Error("Failed to load rules");
-        return res.json();
-      })
-      .then(data => {
-        // If data is empty (first run), we can initialize with one empty rule if we want
-        // or just leave it empty. Let's leave it as is.
-        setRules(data);
-      })
-      .catch(err => console.error("API Error:", err));
+    const fetchData = async () => {
+      try {
+        const [airportRes, ruleRes] = await Promise.all([
+          client.get('/airports'),
+          client.get('/rules')
+        ]);
+        setAirports(airportRes.data.data);
+        setRules(ruleRes.data.data || []);
+      } catch (err) {
+        setNotification({ type: 'error', message: "Failed to load initial data." });
+      }
+    };
+    fetchData();
   }, []);
 
   const addRule = () => {
-    // Generate a temporary ID (we will ignore this ID when sending to backend)
-    setRules([...rules, { id: Date.now(), origins: [], destinations: [], rate: 0, rate_type: 'percentage' }]);
+    setRules([...rules, {
+      id: `temp-${Date.now()}`,
+      origins: [],
+      all_origins: false,
+      destinations: [],
+      all_destinations: false,
+      rate: '',
+      rate_type: 'percentage'
+    }]);
   };
 
   const removeRule = (id) => {
     setRules(rules.filter(r => r.id !== id));
+    const newErrors = { ...errors };
+    delete newErrors[id];
+    setErrors(newErrors);
   };
 
   const updateRule = (id, field, value) => {
     setRules(rules.map(r => r.id === id ? { ...r, [field]: value } : r));
+
+    if (errors[id] && errors[id][field]) {
+      setErrors(prev => ({
+        ...prev,
+        [id]: { ...prev[id], [field]: null }
+      }));
+    }
   };
 
-  const saveRules = () => {
-    setLoading(true);
-    setError(null);
+  const saveRules = async () => {
+    setNotification(null);
+    const newErrors = {};
+    let hasError = false;
+    const signatures = new Set();
 
-    // 2. Send Data to Real Backend
-    fetch('http://localhost:8000/api/rules', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({ rules })
-    })
-    .then(async res => {
-      const data = await res.json();
-      if (!res.ok) {
-        // Handle validation errors from Laravel
-        throw new Error(data.message || "Error saving rules");
+    for (let i = 0; i < rules.length; i++) {
+      const rule = rules[i];
+      const ruleErrors = {};
+
+      if (!rule.rate || rule.rate <= 0) {
+        ruleErrors.rate = "Rate must be > 0";
+        hasError = true;
       }
-      return data;
-    })
-    .then(data => {
-      alert("Success! Rules saved to database.");
-      // Optional: Refresh rules from server to get real IDs back
-      // fetch('http://localhost:8000/api/rules').then(res=>res.json()).then(setRules);
-    })
-    .catch(err => {
-      console.error(err);
-      alert("Failed to save: " + err.message);
-    })
-    .finally(() => {
+
+      if (!rule.all_origins && (!rule.origins || rule.origins.length === 0)) {
+        ruleErrors.origins = "Select origin(s)";
+        hasError = true;
+      }
+
+      if (!rule.all_destinations && (!rule.destinations || rule.destinations.length === 0)) {
+        ruleErrors.destinations = "Select destination(s)";
+        hasError = true;
+      }
+
+
+      if (!rule.all_origins && !rule.all_destinations) {
+        const originCodes = new Set(rule.origins.map(o => o.code));
+        const overlap = rule.destinations.some(d => originCodes.has(d.code));
+
+        if (overlap) {
+          ruleErrors.general = "Origin and Destination cannot be the same";
+          ruleErrors.origins = "Remove overlap";
+          ruleErrors.destinations = "Remove overlap";
+          hasError = true;
+        }
+      }
+
+      const originSig = rule.all_origins ? "ALL" : rule.origins.map(o => o.code).sort().join(',');
+      const destSig = rule.all_destinations ? "ALL" : rule.destinations.map(d => d.code).sort().join(',');
+      const uniqueSignature = `${originSig}|${destSig}`;
+
+      if (signatures.has(uniqueSignature)) {
+        ruleErrors.general = "Duplicate Rule Logic Detected";
+        hasError = true;
+      }
+      signatures.add(uniqueSignature);
+
+      if (Object.keys(ruleErrors).length > 0) {
+        newErrors[rule.id] = ruleErrors;
+      }
+    }
+
+    setErrors(newErrors);
+
+    if (hasError) {
+      setNotification({ type: 'error', message: "Please fix the highlighted errors." });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await client.post('/rules', { rules });
+
+      setNotification({ type: 'success', message: response.data.message });
+
+      const res = await client.get('/rules');
+      setRules(res.data.data);
+      setErrors({});
+
+      setTimeout(() => {
+        setNotification(prev => (prev?.type === 'success' ? null : prev));
+      }, 3000);
+
+    } catch (error) {
+      const msg = error.response?.data?.message || "Save failed";
+      setNotification({ type: 'error', message: msg });
+    } finally {
       setLoading(false);
-    });
+    }
   };
 
   return (
-    <div className="App" style={{maxWidth: '900px', margin: '0 auto', padding: '20px'}}>
-      <h2 style={{marginBottom:'20px'}}>Default Commission Management</h2>
+      <div className="app-container">
 
-      {rules.length === 0 && <p style={{textAlign:'center', color:'#888'}}>No rules found. Add one below.</p>}
+        {notification && (
+            <div className={`notification-banner ${notification.type === 'error' ? 'notification-error' : 'notification-success'}`}>
+              <span>{notification.message}</span>
+              <button className="notification-close" onClick={() => setNotification(null)}>✕</button>
+            </div>
+        )}
 
-      {rules.map((rule) => (
-        <div key={rule.id} className="neu-card" style={{position:'relative'}}>
-          <button
-            onClick={() => removeRule(rule.id)}
-            style={{position:'absolute', top:'10px', right:'15px', border:'none', background:'transparent', color:'#ef4444', fontSize:'1.2rem', cursor:'pointer'}}>
-            ✕
+        <h2 className="page-title">Commission Rules</h2>
+
+        {rules.map((rule) => {
+          const ruleError = errors[rule.id] || {};
+
+          return (
+              <div
+                  key={rule.id}
+                  className={`neu-card ${ruleError.general ? 'card-duplicate' : ''}`}
+              >
+                {ruleError.general && (
+                    <div className="duplicate-warning">
+                      ⚠️ {ruleError.general}
+                    </div>
+                )}
+
+                <button
+                    onClick={() => removeRule(rule.id)}
+                    className="delete-btn"
+                    title="Delete this rule"
+                >
+                  ✕
+                </button>
+
+                <div className="form-grid">
+                  <AirportSelect
+                      label="Origin"
+                      options={airports}
+                      selected={rule.origins || []}
+                      isAll={rule.all_origins}
+                      onToggleAll={(checked) => updateRule(rule.id, 'all_origins', checked)}
+                      onChange={(val) => updateRule(rule.id, 'origins', val)}
+                      error={ruleError.origins}
+                  />
+
+                  <AirportSelect
+                      label="Destination"
+                      options={airports}
+                      selected={rule.destinations || []}
+                      isAll={rule.all_destinations}
+                      onToggleAll={(checked) => updateRule(rule.id, 'all_destinations', checked)}
+                      onChange={(val) => updateRule(rule.id, 'destinations', val)}
+                      error={ruleError.destinations}
+                  />
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label className={`input-label ${ruleError.rate ? 'error' : ''}`}>
+                      Rate
+                    </label>
+                    <input
+                        type="number"
+                        className={`neu-input ${ruleError.rate ? 'input-error' : ''}`}
+                        value={rule.rate}
+                        onChange={(e) => updateRule(rule.id, 'rate', e.target.value)}
+                    />
+                    {ruleError.rate && <div className="error-text">{ruleError.rate}</div>}
+                  </div>
+
+                  <div className="form-group">
+                    <label className="input-label">Type</label>
+                    <select
+                        className="neu-input"
+                        value={rule.rate_type}
+                        onChange={(e) => updateRule(rule.id, 'rate_type', e.target.value)}
+                    >
+                      <option value="percentage">Percentage (%)</option>
+                      <option value="flat">Flat ()</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+          )})}
+
+        <div className="footer-buttons">
+          <button onClick={addRule} className="btn-add">
+            + Add New Rule
           </button>
 
-          <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'20px'}}>
-            <AirportSelect
-              label="Origin"
-              options={airports}
-              selected={rule.origins || []} // Handle nulls safely
-              onChange={(val) => updateRule(rule.id, 'origins', val)}
-            />
-            <AirportSelect
-              label="Destination"
-              options={airports}
-              selected={rule.destinations || []} // Handle nulls safely
-              onChange={(val) => updateRule(rule.id, 'destinations', val)}
-            />
-          </div>
-
-          <div style={{display:'flex', gap:'20px', marginTop:'10px'}}>
-            <div style={{flex:1}}>
-              <label style={{fontSize:'0.8rem', fontWeight:'bold'}}>Rate</label>
-              <input
-                type="number"
-                className="neu-input"
-                value={rule.rate}
-                onChange={(e) => updateRule(rule.id, 'rate', e.target.value)}
-              />
-            </div>
-            <div style={{flex:1}}>
-              <label style={{fontSize:'0.8rem', fontWeight:'bold'}}>Type</label>
-              <select
-                className="neu-input"
-                value={rule.rate_type}
-                onChange={(e) => updateRule(rule.id, 'rate_type', e.target.value)}
-              >
-                <option value="percentage">Percentage</option>
-                <option value="flat">Flat</option>
-              </select>
-            </div>
-          </div>
+          <button onClick={saveRules} disabled={loading} className="btn-save">
+            {loading ? 'Saving...' : 'Save Rules'}
+          </button>
         </div>
-      ))}
-
-      <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginTop:'30px'}}>
-        <button onClick={addRule} className="neu-btn" style={{color:'#3b82f6'}}>
-          + Add New Default Rate
-        </button>
-
-        <button onClick={saveRules} className="neu-btn" style={{background:'#3b82f6', color:'white'}}>
-          {loading ? 'Saving...' : 'Save Rules'}
-        </button>
       </div>
-    </div>
   );
 }
 
