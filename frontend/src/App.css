@@ -15,15 +15,15 @@ body {
 }
 
 /* Neumorphic Card */
-.neu-card {
-  border-radius: 12px;
-  background: var(--bg-color);
-  box-shadow: -5px -5px 10px var(--shadow-light),
-               5px 5px 10px var(--shadow-dark);
-  padding: 20px;
-  border: 1px solid rgba(255,255,255,0.2);
-  margin-bottom: 20px;
-}
+/*.neu-card {*/
+/*  border-radius: 12px;*/
+/*  background: var(--bg-color);*/
+/*  box-shadow: -5px -5px 10px var(--shadow-light),*/
+/*               5px 5px 10px var(--shadow-dark);*/
+/*  padding: 20px;*/
+/*  border: 1px solid rgba(255,255,255,0.2);*/
+/*  margin-bottom: 20px;*/
+/*}*/
 
 /* Neumorphic Input */
 .neu-input {
@@ -142,8 +142,7 @@ body {
   margin-bottom: 20px;
   padding: 50px 20px 20px 20px;
   background: #f8f9fa;
-  border-radius: 10px;
-  box-shadow: 5px 5px 10px #bebebe, -5px -5px 10px #ffffff;
+  border-radius: 12px;
   transition: border 0.2s;
   border: 2px solid transparent;
 }
